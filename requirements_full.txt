@@ -4,3 +4,7 @@ python-docx
 python-pptx
 openpyxl
 tiktoken
+chromadb
+python-telegram-bot
+streamlit
+pyngrok
