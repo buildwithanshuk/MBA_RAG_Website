@@ -1,0 +1,114 @@
+[
+  {
+    "file": "notebooks/01_what_is_rag.ipynb",
+    "step": 1,
+    "title": "What is RAG?",
+    "subtitle": "Understand why RAG exists and see it in action",
+    "what": [
+      "Why GPT-4 hallucinates without context",
+      "The 6-step RAG pipeline",
+      "Side-by-side: with vs without RAG"
+    ],
+    "tags": ["Concept", "GPT-4"],
+    "cost": "~$0.001",
+    "time": "15 min",
+    "colorIdx": 0,
+    "binderReady": true
+  },
+  {
+    "file": "notebooks/02_parse_documents.ipynb",
+    "step": 2,
+    "title": "Document Parsing",
+    "subtitle": "Extract text from PDFs, DOCX, PPTX, and Excel",
+    "what": [
+      "Read all 4 file formats",
+      "Tag files by MBA subject",
+      "Export to parsed_docs.json"
+    ],
+    "tags": ["Files", "No API cost"],
+    "cost": "Free",
+    "time": "20 min",
+    "colorIdx": 1,
+    "binderReady": false
+  },
+  {
+    "file": "notebooks/03_chunk_text.ipynb",
+    "step": 3,
+    "title": "Text Chunking",
+    "subtitle": "Split long documents into smart 500-token pieces",
+    "what": [
+      "Tokens vs words vs characters",
+      "Why overlap prevents broken sentences",
+      "Build a chunking function from scratch"
+    ],
+    "tags": ["Tokenization", "No API cost"],
+    "cost": "Free",
+    "time": "15 min",
+    "colorIdx": 2,
+    "binderReady": false
+  },
+  {
+    "file": "notebooks/04_embeddings.ipynb",
+    "step": 4,
+    "title": "Embeddings",
+    "subtitle": "Turn text into numbers that encode meaning",
+    "what": [
+      "What a vector actually is",
+      "Cosine similarity explained",
+      "Embed all chunks with checkpointing"
+    ],
+    "tags": ["OpenAI", "Vectors"],
+    "cost": "~$0.01",
+    "time": "25 min",
+    "colorIdx": 3,
+    "binderReady": false
+  },
+  {
+    "file": "notebooks/05_retrieval.ipynb",
+    "step": 5,
+    "title": "Retrieval",
+    "subtitle": "Find the right chunks using cosine similarity",
+    "what": [
+      "Semantic search vs keyword search",
+      "Filter by MBA subject",
+      "Interactive search with custom questions"
+    ],
+    "tags": ["Search", "Cosine Sim"],
+    "cost": "~$0.001/query",
+    "time": "20 min",
+    "colorIdx": 4,
+    "binderReady": false
+  },
+  {
+    "file": "notebooks/06_full_rag_pipeline.ipynb",
+    "step": 6,
+    "title": "Full RAG Pipeline",
+    "subtitle": "Chain all 5 steps into a working knowledge base",
+    "what": [
+      "Anti-hallucination prompt design",
+      "WITH vs WITHOUT RAG comparison",
+      "Scale to 1,250+ files with ChromaDB"
+    ],
+    "tags": ["End-to-end", "ChromaDB"],
+    "cost": "~$0.01/question",
+    "time": "30 min",
+    "colorIdx": 5,
+    "binderReady": false
+  },
+  {
+    "file": "notebooks/07_chat_interface.ipynb",
+    "step": 7,
+    "title": "Chat Interface",
+    "subtitle": "Talk to your knowledge base from phone or browser",
+    "what": [
+      "Telegram bot with subject filtering",
+      "Streamlit web UI",
+      "Access from any device via ngrok"
+    ],
+    "tags": ["Telegram", "Streamlit"],
+    "cost": "~$0.01/question",
+    "time": "25 min",
+    "colorIdx": 6,
+    "binderReady": false
+  }
+]

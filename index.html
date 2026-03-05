@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Learn RAG — MBA Knowledge Base Tutorials</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- marked.js — render markdown -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <!-- highlight.js — syntax highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+
+  <!-- Thebe.js — in-browser execution via Binder -->
+  <script src="https://unpkg.com/thebelab@0.9.1/lib/index.js"></script>
+
+  <script type="text/x-thebe-config">
+  {
+    "requestKernel": true,
+    "binderOptions": {
+      "repo": "buildwithanshuk/MBA_RAG_Website",
+      "ref": "main"
+    },
+    "kernelOptions": {
+      "name": "python3"
+    },
+    "selector": "[data-executable]",
+    "predefinedOutput": true
+  }
+  </script>
+
+  <style>
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #1a1d27; }
+    ::-webkit-scrollbar-thumb { background: #3f4258; border-radius: 3px; }
+
+    /* Notebook markdown prose */
+    .nb-prose h1 { font-size: 1.6rem; font-weight: 700; margin: 1.5rem 0 .75rem; color: #f1f5f9; }
+    .nb-prose h2 { font-size: 1.25rem; font-weight: 600; margin: 1.25rem 0 .5rem; color: #e2e8f0; }
+    .nb-prose h3 { font-size: 1.05rem; font-weight: 600; margin: 1rem 0 .4rem; color: #cbd5e1; }
+    .nb-prose p  { margin: .6rem 0; color: #94a3b8; line-height: 1.75; }
+    .nb-prose ul, .nb-prose ol { margin: .6rem 0 .6rem 1.25rem; color: #94a3b8; }
+    .nb-prose li { margin: .25rem 0; line-height: 1.7; }
+    .nb-prose strong { color: #e2e8f0; }
+    .nb-prose code { background: #1e2433; color: #a5b4fc; padding: 1px 5px; border-radius: 3px; font-size: .875em; }
+    .nb-prose pre  { background: #1e2433; padding: 1rem; border-radius: 8px; overflow-x: auto; margin: .75rem 0; }
+    .nb-prose pre code { background: none; padding: 0; color: inherit; }
+    .nb-prose blockquote { border-left: 3px solid #6366f1; padding-left: 1rem; margin: .75rem 0; color: #7c87a6; }
+    .nb-prose hr { border-color: #2d3148; margin: 1.5rem 0; }
+    .nb-prose table { width: 100%; border-collapse: collapse; margin: .75rem 0; font-size: .9rem; }
+    .nb-prose th { background: #1e2433; color: #a5b4fc; padding: .5rem .75rem; text-align: left; border: 1px solid #2d3148; }
+    .nb-prose td { padding: .4rem .75rem; border: 1px solid #2d3148; color: #94a3b8; }
+    .nb-prose tr:nth-child(even) td { background: #14172100; }
+
+    /* Code cell container */
+    .code-cell { border: 1px solid #2d3148; border-radius: 8px; overflow: hidden; margin: .75rem 0; }
+    .code-cell-header { display: flex; align-items: center; justify-content: space-between;
+      background: #1e2433; padding: .4rem .75rem; cursor: pointer; user-select: none; }
+    .code-cell-body { display: none; }
+    .code-cell-body.visible { display: block; }
+    .code-cell-body pre { margin: 0 !important; border-radius: 0 !important; }
+    .code-cell-body .hljs { background: #0d1117 !important; padding: 1rem !important; font-size: .82rem !important; line-height: 1.6 !important; }
+
+    /* Thebe output */
+    .thebe-output { background: #0d1117; border-top: 1px solid #2d3148; padding: .75rem 1rem; font-size: .82rem; color: #94a3b8; white-space: pre-wrap; }
+    .thebe-output:empty { display: none; }
+
+    /* Kernel status badge */
+    #kernel-status { transition: all .3s ease; }
+
+    /* Modal fade-scale */
+    #nb-modal { opacity: 0; transform: translateY(4%) scale(0.98); transition: opacity .25s ease, transform .3s cubic-bezier(.4,0,.2,1); pointer-events: none; }
+    #nb-modal.open { opacity: 1; transform: translateY(0) scale(1); pointer-events: all; }
+
+    /* Card hover */
+    .tutorial-card { transition: transform .2s ease, box-shadow .2s ease; }
+    .tutorial-card:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(99,102,241,.25); }
+
+    /* Step badge gradient */
+    .step-0 { background: linear-gradient(135deg,#6366f1,#8b5cf6); }
+    .step-1 { background: linear-gradient(135deg,#3b82f6,#06b6d4); }
+    .step-2 { background: linear-gradient(135deg,#10b981,#06b6d4); }
+    .step-3 { background: linear-gradient(135deg,#f59e0b,#ef4444); }
+    .step-4 { background: linear-gradient(135deg,#ef4444,#ec4899); }
+    .step-5 { background: linear-gradient(135deg,#8b5cf6,#6366f1); }
+    .step-6 { background: linear-gradient(135deg,#10b981,#3b82f6); }
+
+    /* Loading spinner */
+    .spinner { animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Thebe execute button */
+    .thebelab-run-button {
+      background: #6366f1 !important;
+      color: white !important;
+      border: none !important;
+      padding: 3px 10px !important;
+      border-radius: 4px !important;
+      font-size: .75rem !important;
+      cursor: pointer !important;
+    }
+    .thebelab-run-button:hover { background: #4f46e5 !important; }
+    .thebelab-cell { position: relative; }
+  </style>
+</head>
+<body class="bg-[#0f1117] text-white min-h-screen font-sans antialiased">
+
+  <!-- ── NAV ─────────────────────────────────────────────── -->
+  <nav class="border-b border-[#1e2433] sticky top-0 z-40 bg-[#0f1117]/95 backdrop-blur-sm">
+    <div class="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-xs font-bold">R</div>
+        <span class="font-semibold text-sm tracking-wide">RAG Tutorials</span>
+      </div>
+      <div class="flex items-center gap-1">
+        <button class="px-4 py-1.5 rounded-md text-sm font-medium bg-indigo-500/15 text-indigo-400 border border-indigo-500/30">
+          Tutorials
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ── HERO ──────────────────────────────────────────────── -->
+  <section class="max-w-7xl mx-auto px-6 pt-14 pb-10">
+    <div class="max-w-2xl">
+      <div class="inline-flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/25 rounded-full px-3 py-1 text-xs text-indigo-400 mb-5">
+        <span class="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
+        7 hands-on notebooks · Python · OpenAI
+      </div>
+      <h1 class="text-4xl font-bold leading-tight text-white mb-4">
+        Build an AI over<br/>
+        <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">1,250 MBA files</span>
+      </h1>
+      <p class="text-[#64748b] text-lg leading-relaxed">
+        Step-by-step tutorials that take you from "What is RAG?" to a fully working
+        knowledge base you can query from your phone. No ML background needed.
+      </p>
+    </div>
+  </section>
+
+  <!-- ── CARDS GRID ─────────────────────────────────────────── -->
+  <section class="max-w-7xl mx-auto px-6 pb-24">
+    <div id="cards-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      <!-- Injected by JS -->
+    </div>
+  </section>
+
+  <!-- ── NOTEBOOK MODAL (full-screen drawer) ──────────────────── -->
+  <div id="nb-modal" class="fixed inset-0 bg-[#0f1117] z-50 flex flex-col">
+
+    <!-- Modal toolbar -->
+    <div class="flex items-center justify-between px-5 py-3 border-b border-[#1e2433] shrink-0">
+      <div class="flex items-center gap-3">
+        <button onclick="closeModal()" class="p-1.5 rounded-md hover:bg-[#1e2433] text-[#64748b] hover:text-white transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+        <span id="nb-modal-title" class="font-semibold text-sm text-white"></span>
+      </div>
+      <div class="flex items-center gap-2">
+        <!-- Global code toggle -->
+        <button id="toggle-code-btn" onclick="toggleAllCode()"
+          class="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border border-[#2d3148] text-[#94a3b8] hover:text-white hover:border-indigo-500/40 transition-all">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+          Show code
+        </button>
+        <!-- Activate Binder -->
+        <button id="activate-btn" onclick="activateThebe()"
+          class="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-indigo-600 hover:bg-indigo-500 text-white transition-colors">
+          <svg id="activate-icon" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          <span id="activate-label">Run in browser</span>
+        </button>
+        <div id="kernel-status" class="hidden items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium border border-[#2d3148] text-[#64748b]">
+          <svg class="w-3 h-3 spinner" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          <span id="kernel-status-text">Starting kernel…</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- API key panel — shown when user clicks "Run in browser" -->
+    <div id="api-key-panel" class="hidden border-t border-[#1e2433] px-5 py-4 bg-[#0d1117] shrink-0">
+      <p class="text-xs text-[#64748b] mb-3">Enter your OpenAI API key to run cells in this notebook.</p>
+      <div class="flex gap-2 mb-2">
+        <input id="api-key-input" type="password" placeholder="sk-proj-..."
+          class="flex-1 bg-[#151929] border border-[#252d4a] rounded-md px-3 py-1.5 text-sm text-white placeholder-[#475569] outline-none focus:border-indigo-500"
+          onkeydown="if(event.key==='Enter') connectKernel()" />
+        <button onclick="connectKernel()"
+          class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium rounded-md transition-colors">
+          Connect &amp; run
+        </button>
+      </div>
+      <div class="flex items-center justify-between">
+        <p class="text-[10px] text-[#475569]">&#128274; Held in memory only — disappears on refresh. Never stored or sent to our servers.</p>
+        <button onclick="skipViewOnly()" class="text-[10px] text-[#475569] hover:text-[#94a3b8] underline ml-4 shrink-0">Skip — view only</button>
+      </div>
+    </div>
+
+    <!-- Notebook content -->
+    <div id="nb-content" class="flex-1 overflow-y-auto py-8">
+      <div class="max-w-4xl mx-auto w-full px-6">
+        <div id="nb-loading" class="flex items-center gap-3 text-[#64748b] py-12">
+          <svg class="w-5 h-5 spinner" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          Loading notebook…
+        </div>
+        <div id="nb-cells" class="space-y-1 hidden"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SCRIPTS ──────────────────────────────────────────────── -->
+  <script>
+  // ── Notebook metadata ─────────────────────────────────────────
+  // AUTO-GENERATED by tools/build_site.py — do not edit by hand.
+  // Edit tools/notebook_meta.json, then run: python tools/build_site.py
+  // NOTEBOOKS_START
+  const NOTEBOOKS = [
+  {
+    "file": "notebooks/01_what_is_rag.ipynb",
+    "step": 1,
+    "title": "What is RAG?",
+    "subtitle": "Understand why RAG exists and see it in action",
+    "what": [
+      "Why GPT-4 hallucinates without context",
+      "The 6-step RAG pipeline",
+      "Side-by-side: with vs without RAG"
+    ],
+    "tags": ["Concept", "GPT-4"],
+    "cost": "~$0.001",
+    "time": "15 min",
+    "colorIdx": 0,
+    "binderReady": true
+  },
+  {
+    "file": "notebooks/02_parse_documents.ipynb",
+    "step": 2,
+    "title": "Document Parsing",
+    "subtitle": "Extract text from PDFs, DOCX, PPTX, and Excel",
+    "what": [
+      "Read all 4 file formats",
+      "Tag files by MBA subject",
+      "Export to parsed_docs.json"
+    ],
+    "tags": ["Files", "No API cost"],
+    "cost": "Free",
+    "time": "20 min",
+    "colorIdx": 1,
+    "binderReady": false
+  },
+  {
+    "file": "notebooks/03_chunk_text.ipynb",
+    "step": 3,
+    "title": "Text Chunking",
+    "subtitle": "Split long documents into smart 500-token pieces",
+    "what": [
+      "Tokens vs words vs characters",
+      "Why overlap prevents broken sentences",
+      "Build a chunking function from scratch"
+    ],
+    "tags": ["Tokenization", "No API cost"],
+    "cost": "Free",
+    "time": "15 min",
+    "colorIdx": 2,
+    "binderReady": false
+  },
+  {
+    "file": "notebooks/04_embeddings.ipynb",
+    "step": 4,
+    "title": "Embeddings",
+    "subtitle": "Turn text into numbers that encode meaning",
+    "what": [
+      "What a vector actually is",
+      "Cosine similarity explained",
+      "Embed all chunks with checkpointing"
+    ],
+    "tags": ["OpenAI", "Vectors"],
+    "cost": "~$0.01",
+    "time": "25 min",
+    "colorIdx": 3,
+    "binderReady": false
+  },
+  {
+    "file": "notebooks/05_retrieval.ipynb",
+    "step": 5,
+    "title": "Retrieval",
+    "subtitle": "Find the right chunks using cosine similarity",
+    "what": [
+      "Semantic search vs keyword search",
+      "Filter by MBA subject",
+      "Interactive search with custom questions"
+    ],
+    "tags": ["Search", "Cosine Sim"],
+    "cost": "~$0.001/query",
+    "time": "20 min",
+    "colorIdx": 4,
+    "binderReady": false
+  },
+  {
+    "file": "notebooks/06_full_rag_pipeline.ipynb",
+    "step": 6,
+    "title": "Full RAG Pipeline",
+    "subtitle": "Chain all 5 steps into a working knowledge base",
+    "what": [
+      "Anti-hallucination prompt design",
+      "WITH vs WITHOUT RAG comparison",
+      "Scale to 1,250+ files with ChromaDB"
+    ],
+    "tags": ["End-to-end", "ChromaDB"],
+    "cost": "~$0.01/question",
+    "time": "30 min",
+    "colorIdx": 5,
+    "binderReady": false
+  },
+  {
+    "file": "notebooks/07_chat_interface.ipynb",
+    "step": 7,
+    "title": "Chat Interface",
+    "subtitle": "Talk to your knowledge base from phone or browser",
+    "what": [
+      "Telegram bot with subject filtering",
+      "Streamlit web UI",
+      "Access from any device via ngrok"
+    ],
+    "tags": ["Telegram", "Streamlit"],
+    "cost": "~$0.01/question",
+    "time": "25 min",
+    "colorIdx": 6,
+    "binderReady": false
+  }
+];
+  // NOTEBOOKS_END
+
+  // ── Render cards ───────────────────────────────────────────────
+  function renderCards() {
+    const grid = document.getElementById('cards-grid')
+    grid.innerHTML = NOTEBOOKS.map((nb, i) => `
+      <div class="tutorial-card bg-[#151929] border border-[#252d4a] rounded-xl p-5 cursor-pointer overflow-hidden"
+           onclick="openNotebook(${i})">
+        <div class="h-1 step-${nb.colorIdx} -mx-5 -mt-5 mb-4 rounded-t-xl"></div>
+        <div class="flex items-start justify-between mb-4">
+          <div class="step-${nb.colorIdx} w-9 h-9 rounded-lg flex items-center justify-center text-white font-bold text-sm shadow-lg">
+            ${String(nb.step).padStart(2,'0')}
+          </div>
+          <span class="text-[10px] font-medium text-[#475569] bg-[#1e2433] border border-[#2d3148] rounded-full px-2.5 py-0.5">
+            ${nb.time}
+          </span>
+        </div>
+        <h3 class="font-semibold text-white text-base mb-1">${nb.title}</h3>
+        <p class="text-[#64748b] text-sm mb-4 leading-relaxed">${nb.subtitle}</p>
+        <ul class="space-y-1.5 mb-5">
+          ${nb.what.map(w => `
+            <li class="flex items-start gap-2 text-xs text-[#475569]">
+              <svg class="w-3.5 h-3.5 text-indigo-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+              </svg>
+              ${w}
+            </li>`).join('')}
+        </ul>
+        ${nb.binderReady
+          ? `<div class="flex items-center gap-1.5 mb-3">
+               <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0"></span>
+               <span class="text-[10px] text-emerald-400 font-medium">Runnable in browser</span>
+             </div>`
+          : `<div class="flex items-center gap-1.5 mb-3">
+               <span class="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0"></span>
+               <span class="text-[10px] text-amber-400 font-medium">Google Drive required</span>
+             </div>`
+        }
+        <div class="flex items-center justify-between pt-4 border-t border-[#1e2433]">
+          <div class="flex flex-wrap gap-1.5">
+            ${nb.tags.map(t => `<span class="text-[10px] text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 rounded-full px-2 py-0.5">${t}</span>`).join('')}
+          </div>
+          <span class="text-[10px] text-emerald-400 font-medium">${nb.cost}</span>
+        </div>
+      </div>
+    `).join('')
+  }
+
+  // ── Modal open / close ──────────────────────────────────────────
+  let currentNb = null
+  let codeVisible = false
+  let thebeActivated = false
+
+  function openNotebook(idx) {
+    currentNb = NOTEBOOKS[idx]
+    codeVisible = false
+
+    document.getElementById('nb-modal-title').textContent = `Step ${currentNb.step} — ${currentNb.title}`
+    document.getElementById('toggle-code-btn').innerHTML = `
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+      Show code`
+    document.getElementById('nb-loading').classList.remove('hidden')
+    document.getElementById('nb-cells').classList.add('hidden')
+    document.getElementById('nb-cells').innerHTML = ''
+
+    document.getElementById('api-key-panel').classList.add('hidden')
+    document.getElementById('nb-modal').classList.add('open')
+    document.body.style.overflow = 'hidden'
+
+    fetchAndRender(currentNb.file)
+  }
+
+  function closeModal() {
+    document.getElementById('nb-modal').classList.remove('open')
+    document.body.style.overflow = ''
+    currentNb = null
+  }
+
+  // ── Fetch + render notebook ─────────────────────────────────────
+  async function fetchAndRender(filePath) {
+    try {
+      const res = await fetch(filePath)
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const nb = await res.json()
+      renderNotebook(nb)
+    } catch (e) {
+      document.getElementById('nb-loading').innerHTML =
+        `<span class="text-red-400 text-sm">Failed to load notebook: ${e.message}</span>`
+    }
+  }
+
+  function renderNotebook(nb) {
+    const cells = nb.cells || []
+    const container = document.getElementById('nb-cells')
+    container.innerHTML = ''
+
+    cells.forEach((cell, idx) => {
+      const src = Array.isArray(cell.source) ? cell.source.join('') : (cell.source || '')
+      if (!src.trim()) return
+
+      const wrapper = document.createElement('div')
+
+      if (cell.cell_type === 'markdown') {
+        wrapper.className = 'nb-prose py-2'
+        wrapper.innerHTML = marked.parse(src)
+      } else if (cell.cell_type === 'code') {
+        const cellId = `code-cell-${idx}`
+        const escaped = src.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+
+        // Execution outputs (from saved notebook)
+        let outputHtml = ''
+        const outputs = cell.outputs || []
+        outputs.forEach(out => {
+          const text = (out.text || out['text/plain'] || []).join ? (out.text || out['text/plain'] || []).join('') : (out.text || out['text/plain'] || '')
+          if (text.trim()) outputHtml += `<div class="thebe-output">${text}</div>`
+        })
+
+        wrapper.innerHTML = `
+          <div class="code-cell" id="${cellId}">
+            <div class="code-cell-header" onclick="toggleCell('${cellId}')">
+              <div class="flex items-center gap-2">
+                <span class="text-[10px] font-mono font-semibold text-[#475569] bg-[#12151e] border border-[#2d3148] rounded px-1.5 py-0.5">In [${idx+1}]</span>
+                <span class="text-[11px] text-[#475569] truncate max-w-xs">${src.split('\n')[0].substring(0,60)}${src.split('\n')[0].length > 60 ? '…' : ''}</span>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <button onclick="event.stopPropagation(); runCell('${cellId}')"
+                  class="p-1 rounded hover:bg-[#252d4a] text-[#475569] hover:text-indigo-400 transition-colors"
+                  title="Run cell">
+                  <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                </button>
+                <svg class="w-3.5 h-3.5 text-[#475569] chevron-icon transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </div>
+            </div>
+            <div class="code-cell-body ${codeVisible ? 'visible' : ''}">
+              <pre data-executable="true" data-language="python"><code class="language-python">${escaped}</code></pre>
+              ${outputHtml}
+            </div>
+          </div>`
+      }
+
+      container.appendChild(wrapper)
+    })
+
+    // Syntax highlight all code
+    container.querySelectorAll('pre code').forEach(el => hljs.highlightElement(el))
+
+    document.getElementById('nb-loading').classList.add('hidden')
+    container.classList.remove('hidden')
+  }
+
+  // ── Toggle code visibility ──────────────────────────────────────
+  function toggleCell(cellId) {
+    const body = document.querySelector(`#${cellId} .code-cell-body`)
+    const chevron = document.querySelector(`#${cellId} .chevron-icon`)
+    if (!body) return
+    body.classList.toggle('visible')
+    if (chevron) chevron.style.transform = body.classList.contains('visible') ? 'rotate(180deg)' : ''
+  }
+
+  function toggleAllCode() {
+    codeVisible = !codeVisible
+    document.querySelectorAll('.code-cell-body').forEach(el => {
+      el.classList.toggle('visible', codeVisible)
+    })
+    document.querySelectorAll('.chevron-icon').forEach(el => {
+      el.style.transform = codeVisible ? 'rotate(180deg)' : ''
+    })
+    const btn = document.getElementById('toggle-code-btn')
+    btn.innerHTML = codeVisible
+      ? `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 4.411m0 0L21 21"/></svg> Hide code`
+      : `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg> Show code`
+  }
+
+  // ── Thebe / Binder activation ───────────────────────────────────
+  function activateThebe() {
+    if (thebeActivated) return
+    document.getElementById('api-key-panel').classList.remove('hidden')
+    document.getElementById('api-key-input').focus()
+  }
+
+  function skipViewOnly() {
+    document.getElementById('api-key-panel').classList.add('hidden')
+  }
+
+  function connectKernel() {
+    const apiKey = document.getElementById('api-key-input').value.trim()
+    document.getElementById('api-key-panel').classList.add('hidden')
+
+    const btn = document.getElementById('activate-btn')
+    const label = document.getElementById('activate-label')
+    const status = document.getElementById('kernel-status')
+    const statusText = document.getElementById('kernel-status-text')
+
+    btn.disabled = true
+    btn.classList.add('opacity-60')
+    label.textContent = 'Connecting…'
+    status.classList.remove('hidden')
+    status.classList.add('flex')
+
+    // Show all code cells so thebe can attach to them
+    if (!codeVisible) toggleAllCode()
+
+    // Bootstrap thebe
+    thebelab.bootstrap()
+
+    // Listen for kernel ready (once only)
+    document.addEventListener('thebe-kernel-ready', (event) => {
+      thebeActivated = true
+
+      // Silently inject API key into kernel environment
+      if (apiKey) {
+        const safeKey = apiKey.replace(/\\/g, '\\\\').replace(/'/g, "\\'")
+        const kernel = event.detail && (event.detail.kernel || (event.detail.session && event.detail.session.kernel))
+        if (kernel && kernel.requestExecute) {
+          kernel.requestExecute({ code: `import os\nos.environ['OPENAI_API_KEY'] = '${safeKey}'` })
+        }
+      }
+
+      btn.disabled = false
+      btn.classList.remove('opacity-60')
+      btn.classList.replace('bg-indigo-600', 'bg-emerald-600')
+      btn.classList.replace('hover:bg-indigo-500', 'hover:bg-emerald-500')
+      label.textContent = 'Kernel ready'
+      statusText.textContent = 'Kernel ready'
+      document.getElementById('activate-icon').innerHTML =
+        '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>'
+      status.querySelectorAll('.spinner').forEach(s => s.classList.remove('spinner'))
+    }, { once: true })
+  }
+
+  // ── Per-cell run button ─────────────────────────────────────────
+  function runCell(cellId) {
+    const cell = document.getElementById(cellId)
+    if (!cell) return
+
+    if (!thebeActivated) {
+      // Not connected yet — start the connect flow
+      activateThebe()
+      return
+    }
+
+    // Ensure the cell body is visible so Thebe's button is accessible
+    const body = cell.querySelector('.code-cell-body')
+    if (body && !body.classList.contains('visible')) {
+      body.classList.add('visible')
+      const chevron = cell.querySelector('.chevron-icon')
+      if (chevron) chevron.style.transform = 'rotate(180deg)'
+    }
+
+    // Click Thebe's injected run button for this cell
+    const thebeBtn = cell.querySelector('.thebelab-run-button')
+    if (thebeBtn) thebeBtn.click()
+  }
+
+  // ── Keyboard: Escape to close ───────────────────────────────────
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeModal()
+  })
+
+  // ── Init ────────────────────────────────────────────────────────
+  renderCards()
+  </script>
+</body>
+</html>
