@@ -439,7 +439,15 @@
         wrapper.innerHTML = marked.parse(src)
       } else if (cell.cell_type === 'code') {
         const cellId = `code-cell-${idx}`
-        const escaped = src.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+        // Extract #@title text for use as cell header label
+        const titleMatch = src.match(/^#@title\s+(.+?)(?:\s+\{[^}]*\})?\s*$/m)
+        const cellTitle = titleMatch ? titleMatch[1].trim() : null
+        // Strip Colab-specific directives from displayed code
+        const displaySrc = src.split('\n')
+          .filter(line => !line.trimStart().startsWith('#@title') && !line.trimStart().startsWith('#@markdown'))
+          .map(line => line.replace(/\s*#@param\s*\{[^}]*\}\s*$/, ''))
+          .join('\n').trim()
+        const escaped = displaySrc.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
 
         // Execution outputs (from saved notebook)
         let outputHtml = ''
@@ -454,7 +462,7 @@
             <div class="code-cell-header" onclick="toggleCell('${cellId}')">
               <div class="flex items-center gap-2">
                 <span class="text-[10px] font-mono font-semibold text-[#475569] bg-[#12151e] border border-[#2d3148] rounded px-1.5 py-0.5">In [${idx+1}]</span>
-                <span class="text-[11px] text-[#475569] truncate max-w-xs">${src.split('\n')[0].substring(0,60)}${src.split('\n')[0].length > 60 ? '…' : ''}</span>
+                <span class="text-[11px] text-[#475569] truncate max-w-xs">${(cellTitle || displaySrc.split('\n').find(l => l.trim()) || '').substring(0,60)}${(cellTitle || displaySrc.split('\n').find(l => l.trim()) || '').length > 60 ? '…' : ''}</span>
               </div>
               <div class="flex items-center gap-1.5">
                 <button onclick="event.stopPropagation(); runCell('${cellId}')"
